@@ -1,17 +1,17 @@
 import { Link } from "react-router-dom";
 
-const steps = [
+const features = [
   {
-    title: "Cuenta unica para comprar y vender",
-    description: "Alterna entre modo comprador y vendedor desde el mismo perfil.",
+    title: "Numeros claros",
+    description: "Grid ordenado con formatos 00-99 o 000-999.",
   },
   {
-    title: "Reserva numeros y compra demo",
-    description: "Selecciona numeros disponibles con reserva temporal y pago simulado.",
+    title: "Reserva temporal",
+    description: "Aparta numeros por minutos mientras confirmas.",
   },
   {
-    title: "Administra rifas con claridad",
-    description: "Ve progreso, participantes y resultados en un solo panel.",
+    title: "Modo vendedor",
+    description: "Crea y controla rifas desde un panel limpio.",
   },
 ];
 
@@ -22,16 +22,16 @@ type OnboardingProps = {
 };
 
 const Onboarding = ({
-  title = "Bienvenido a RifaApp",
-  subtitle = "Inicia sesion para desbloquear la experiencia completa de rifas.",
-  note = "Proyecto educativo: el flujo de compra es simulado y sin pasarelas.",
+  title = "Rifas estilo colombiano en modo demo",
+  subtitle = "Compra y organiza rifas con saldo simulado en COP.",
+  note = "Proyecto educativo: el flujo de compra es simulado.",
 }: OnboardingProps) => (
   <section className="page onboarding">
     <div className="card onboarding-card">
       <p className="eyebrow">RifaApp</p>
       <h1>{title}</h1>
       <p className="subtitle">{subtitle}</p>
-      <div className="cta-row">
+      <div className="hero-actions">
         <Link className="btn btn-primary" to="/register">
           Crear cuenta
         </Link>
@@ -39,13 +39,13 @@ const Onboarding = ({
           Ya tengo cuenta
         </Link>
       </div>
-      <div className="onboarding-steps">
-        {steps.map((step, index) => (
-          <div className="step" key={step.title}>
-            <span className="step-index">0{index + 1}</span>
+      <div className="onboarding-features">
+        {features.map((item) => (
+          <div className="feature-item" key={item.title}>
+            <span className="feature-dot" />
             <div>
-              <p className="step-title">{step.title}</p>
-              <p className="step-description">{step.description}</p>
+              <p className="feature-title">{item.title}</p>
+              <p className="feature-text">{item.description}</p>
             </div>
           </div>
         ))}

@@ -10,6 +10,28 @@ const Layout = () => {
   const { user, logout } = useAuth();
   const { mode } = useApp();
 
+  if (!user) {
+    return (
+      <div className="public-shell">
+        <header className="public-header">
+          <div className="brand">
+            <span className="brand-mark">R</span>
+            <div>
+              <p className="brand-name">RifaApp</p>
+              <p className="brand-tagline">Rifas estilo colombiano en modo demo.</p>
+            </div>
+          </div>
+        </header>
+        <main className="app-main public-main">
+          <Outlet />
+        </main>
+        <footer className="app-footer">
+          <p>Proyecto de aprendizaje. Compra simulada sin pasarela de pagos.</p>
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">

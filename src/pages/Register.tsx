@@ -29,10 +29,9 @@ const RegisterPage = () => {
   return (
     <section className="page narrow">
       <div className="section-header">
-        <div>
-          <h2>Crear cuenta</h2>
-          <p>Guarda tu perfil para crear y comprar rifas mas rapido.</p>
-        </div>
+        <p className="eyebrow">Registro</p>
+        <h2>Crear cuenta</h2>
+        <p className="subtitle">Guarda tu perfil para crear y comprar rifas mas rapido.</p>
       </div>
       <form className="form card" onSubmit={handleSubmit}>
         <div className="field">

@@ -8,19 +8,19 @@ const Layout = () => {
   return (
     <div className="app-shell">
       <header className="app-header">
+        <nav className="nav-links">
+          <NavLink to="/" end>
+            Inicio
+          </NavLink>
+          {user && <NavLink to="/create">Crear rifa</NavLink>}
+        </nav>
         <div className="brand">
           <span className="brand-mark">R</span>
           <div>
             <p className="brand-name">RifaApp</p>
-            <p className="brand-tagline">Rifas digitales, cero drama.</p>
+            <p className="brand-tagline">Rifas digitales con estilo limpio.</p>
           </div>
         </div>
-        <nav className="nav-links">
-          <NavLink to="/" end>
-            Rifas
-          </NavLink>
-          <NavLink to="/create">Crear</NavLink>
-        </nav>
         <div className="auth-block">
           {user ? (
             <>

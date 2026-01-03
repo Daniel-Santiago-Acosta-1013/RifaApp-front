@@ -28,10 +28,9 @@ const LoginPage = () => {
   return (
     <section className="page narrow">
       <div className="section-header">
-        <div>
-          <h2>Bienvenido de vuelta</h2>
-          <p>Ingresa para acelerar tus compras y creaciones.</p>
-        </div>
+        <p className="eyebrow">Acceso</p>
+        <h2>Bienvenido de vuelta</h2>
+        <p className="subtitle">Ingresa para acelerar tus compras y creaciones.</p>
       </div>
       <form className="form card" onSubmit={handleSubmit}>
         <div className="field">

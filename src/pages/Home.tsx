@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { listRaffles } from "../api/client";
+import Onboarding from "../components/Onboarding";
+import { useAuth } from "../context/AuthContext";
 import type { Raffle } from "../types";
 
 const formatMoney = (value: string, currency: string) => {
@@ -16,6 +18,7 @@ const formatMoney = (value: string, currency: string) => {
 };
 
 const HomePage = () => {
+  const { user } = useAuth();
   const [raffles, setRaffles] = useState<Raffle[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
@@ -23,6 +26,12 @@ const HomePage = () => {
 
   useEffect(() => {
     let active = true;
+    if (!user) {
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
     setLoading(true);
     listRaffles(statusFilter === "all" ? undefined : statusFilter)
       .then((data) => {
@@ -44,42 +53,27 @@ const HomePage = () => {
     return () => {
       active = false;
     };
-  }, [statusFilter]);
+  }, [statusFilter, user]);
+
+  if (!user) {
+    return <Onboarding />;
+  }
 
   return (
     <section className="page">
-      <div className="hero">
-        <div>
-          <p className="hero-kicker">Gestiona rifas con un flujo simple</p>
-          <h1>
-            Crea, publica y vende tus rifas sin depender de pasarelas de pago.
-          </h1>
-          <p className="hero-subtitle">
-            RifaApp conecta el backend en Lambda con una interfaz clara y moderna para
-            aprender el ciclo completo.
-          </p>
-          <div className="hero-actions">
-            <Link className="btn btn-primary" to="/create">
-              Nueva rifa
-            </Link>
-            <a className="btn btn-ghost" href="#catalogo">
-              Ver catalogo
-            </a>
-          </div>
-        </div>
-        <div className="hero-card">
-          <p className="hero-card-title">Panel rapido</p>
-          <div className="hero-stats">
-            <div>
-              <span>Rifas activas</span>
-              <strong>{raffles.filter((raffle) => raffle.status === "open").length}</strong>
-            </div>
-            <div>
-              <span>Rifas cerradas</span>
-              <strong>{raffles.filter((raffle) => raffle.status !== "open").length}</strong>
-            </div>
-          </div>
-          <p className="hero-note">Actualiza el estado desde el backend cuando quieras.</p>
+      <div className="hero center">
+        <p className="eyebrow">Panel de rifas</p>
+        <h1>Gestiona tus rifas con una interfaz limpia y centralizada.</h1>
+        <p className="subtitle">
+          Crea nuevas rifas, revisa su progreso y acompaña el flujo completo desde un solo lugar.
+        </p>
+        <div className="hero-actions">
+          <Link className="btn btn-primary" to="/create">
+            Crear rifa
+          </Link>
+          <button className="btn btn-ghost" type="button" onClick={() => setStatusFilter("open")}>
+            Ver abiertas
+          </button>
         </div>
       </div>
 

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { getRaffle, purchaseTickets } from "../api/client";
+import Onboarding from "../components/Onboarding";
 import { useAuth } from "../context/AuthContext";
 import type { Raffle, TicketPurchaseResponse } from "../types";
 
@@ -32,6 +33,12 @@ const RaffleDetailPage = () => {
 
   useEffect(() => {
     let active = true;
+    if (!user) {
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
     if (!raffleId) {
       setError("Rifa no encontrada");
       setLoading(false);
@@ -58,7 +65,16 @@ const RaffleDetailPage = () => {
     return () => {
       active = false;
     };
-  }, [raffleId]);
+  }, [raffleId, user]);
+
+  if (!user) {
+    return (
+      <Onboarding
+        title="Registra tu cuenta para participar"
+        subtitle="Necesitas iniciar sesion para comprar boletos y ver el detalle de cada rifa."
+      />
+    );
+  }
 
   useEffect(() => {
     if (user) {

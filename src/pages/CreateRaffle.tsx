@@ -2,8 +2,11 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { createRaffle } from "../api/client";
+import Onboarding from "../components/Onboarding";
+import { useAuth } from "../context/AuthContext";
 
 const CreateRafflePage = () => {
+  const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [ticketPrice, setTicketPrice] = useState("5");
@@ -13,6 +16,15 @@ const CreateRafflePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdId, setCreatedId] = useState<string | null>(null);
+
+  if (!user) {
+    return (
+      <Onboarding
+        title="Necesitas una cuenta para crear rifas"
+        subtitle="Registra tu perfil para desbloquear la creacion de rifas y el panel completo."
+      />
+    );
+  }
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -47,10 +59,9 @@ const CreateRafflePage = () => {
   return (
     <section className="page">
       <div className="section-header">
-        <div>
-          <h2>Crear nueva rifa</h2>
-          <p>Define la historia, el precio y el momento del sorteo.</p>
-        </div>
+        <p className="eyebrow">Nueva rifa</p>
+        <h2>Crear nueva rifa</h2>
+        <p className="subtitle">Define la historia, el precio y el momento del sorteo.</p>
       </div>
 
       <form className="form card" onSubmit={handleSubmit}>

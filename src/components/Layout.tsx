@@ -1,27 +1,34 @@
 import { NavLink, Outlet } from "react-router-dom";
 
+import { useApp } from "../context/AppContext";
 import { useAuth } from "../context/AuthContext";
+import BottomNav from "./BottomNav";
+import ModeSwitch from "./ModeSwitch";
+import SidebarNav from "./SidebarNav";
 
 const Layout = () => {
   const { user, logout } = useAuth();
+  const { mode } = useApp();
 
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <nav className="nav-links">
-          <NavLink to="/" end>
-            Inicio
-          </NavLink>
-          {user && <NavLink to="/create">Crear rifa</NavLink>}
-        </nav>
-        <div className="brand">
-          <span className="brand-mark">R</span>
-          <div>
-            <p className="brand-name">RifaApp</p>
-            <p className="brand-tagline">Rifas digitales con estilo limpio.</p>
+      <aside className="sidebar">
+        <div className="brand-block">
+          <div className="brand">
+            <span className="brand-mark">R</span>
+            <div>
+              <p className="brand-name">RifaApp</p>
+              <p className="brand-tagline">Rifas colombianas en modo demo.</p>
+            </div>
           </div>
+          {user && (
+            <div className="mode-switch-wrapper desktop-only">
+              <ModeSwitch />
+            </div>
+          )}
         </div>
-        <div className="auth-block">
+        <SidebarNav />
+        <div className="sidebar-footer">
           {user ? (
             <>
               <div className="user-pill">
@@ -43,13 +50,43 @@ const Layout = () => {
             </>
           )}
         </div>
-      </header>
-      <main className="app-main">
-        <Outlet />
-      </main>
-      <footer className="app-footer">
-        <p>Proyecto de aprendizaje. Compra simulada sin pasarela de pagos.</p>
-      </footer>
+      </aside>
+
+      <div className="app-content">
+        <header className="topbar">
+          <div className="brand compact">
+            <span className="brand-mark">R</span>
+            <div>
+              <p className="brand-name">RifaApp</p>
+              <p className="brand-tagline">{mode === "sell" ? "Modo vendedor" : "Modo comprador"}</p>
+            </div>
+          </div>
+          {user && (
+            <div className="mode-switch-wrapper mobile-only">
+              <ModeSwitch />
+            </div>
+          )}
+          <div className="auth-inline">
+            {user ? (
+              <button className="btn btn-ghost" onClick={logout} type="button">
+                Salir
+              </button>
+            ) : (
+              <NavLink className="btn btn-ghost" to="/login">
+                Entrar
+              </NavLink>
+            )}
+          </div>
+        </header>
+        <main className="app-main">
+          <Outlet />
+        </main>
+        <footer className="app-footer">
+          <p>Proyecto de aprendizaje. Compra simulada sin pasarela de pagos.</p>
+        </footer>
+      </div>
+
+      <BottomNav />
     </div>
   );
 };

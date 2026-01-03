@@ -31,7 +31,7 @@ const RegisterPage = () => {
       <div className="section-header">
         <p className="eyebrow">Registro</p>
         <h2>Crear cuenta</h2>
-        <p className="subtitle">Guarda tu perfil para crear y comprar rifas mas rapido.</p>
+        <p className="subtitle">Tu cuenta unica activa modo comprador y vendedor.</p>
       </div>
       <form className="form card" onSubmit={handleSubmit}>
         <div className="field">

@@ -30,7 +30,7 @@ const LoginPage = () => {
       <div className="section-header">
         <p className="eyebrow">Acceso</p>
         <h2>Bienvenido de vuelta</h2>
-        <p className="subtitle">Ingresa para acelerar tus compras y creaciones.</p>
+        <p className="subtitle">Ingresa para alternar entre comprar y vender rifas.</p>
       </div>
       <form className="form card" onSubmit={handleSubmit}>
         <div className="field">

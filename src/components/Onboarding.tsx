@@ -2,16 +2,16 @@ import { Link } from "react-router-dom";
 
 const steps = [
   {
-    title: "Registra tu cuenta",
-    description: "Guarda tus datos para comprar y crear rifas sin friccion.",
+    title: "Cuenta unica para comprar y vender",
+    description: "Alterna entre modo comprador y vendedor desde el mismo perfil.",
   },
   {
-    title: "Explora rifas activas",
-    description: "Consulta disponibilidad, precios y fechas en tiempo real.",
+    title: "Reserva numeros y compra demo",
+    description: "Selecciona numeros disponibles con reserva temporal y pago simulado.",
   },
   {
-    title: "Compra boletos",
-    description: "Simula el flujo completo sin pasarela de pagos.",
+    title: "Administra rifas con claridad",
+    description: "Ve progreso, participantes y resultados en un solo panel.",
   },
 ];
 
@@ -23,8 +23,8 @@ type OnboardingProps = {
 
 const Onboarding = ({
   title = "Bienvenido a RifaApp",
-  subtitle = "Registra tu cuenta para crear y comprar rifas con seguridad.",
-  note = "Proyecto educativo: el flujo de compra es simulado.",
+  subtitle = "Inicia sesion para desbloquear la experiencia completa de rifas.",
+  note = "Proyecto educativo: el flujo de compra es simulado y sin pasarelas.",
 }: OnboardingProps) => (
   <section className="page onboarding">
     <div className="card onboarding-card">

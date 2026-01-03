@@ -1,26 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { listRaffles } from "../api/client";
+import { listRafflesV2 } from "../api/client";
 import Onboarding from "../components/Onboarding";
+import { useApp } from "../context/AppContext";
 import { useAuth } from "../context/AuthContext";
-import type { Raffle } from "../types";
-
-const formatMoney = (value: string, currency: string) => {
-  const numeric = Number.parseFloat(value);
-  if (Number.isNaN(numeric)) {
-    return `${value} ${currency}`;
-  }
-  return new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency,
-  }).format(numeric);
-};
+import type { RaffleV2 } from "../types";
+import { formatDate, formatMoney } from "../utils/format";
 
 const HomePage = () => {
   const { user } = useAuth();
-  const [raffles, setRaffles] = useState<Raffle[]>([]);
-  const [statusFilter, setStatusFilter] = useState("all");
+  const { mode, balance } = useApp();
+  const [raffles, setRaffles] = useState<RaffleV2[]>([]);
+  const [statusFilter, setStatusFilter] = useState("open");
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,7 +26,7 @@ const HomePage = () => {
       };
     }
     setLoading(true);
-    listRaffles(statusFilter === "all" ? undefined : statusFilter)
+    listRafflesV2(statusFilter === "all" ? undefined : statusFilter)
       .then((data) => {
         if (active) {
           setRaffles(data);
@@ -59,28 +52,92 @@ const HomePage = () => {
     return <Onboarding />;
   }
 
+  const filteredRaffles = useMemo(() => {
+    if (!search.trim()) {
+      return raffles;
+    }
+    const term = search.trim().toLowerCase();
+    return raffles.filter(
+      (raffle) =>
+        raffle.title.toLowerCase().includes(term) ||
+        (raffle.description || "").toLowerCase().includes(term),
+    );
+  }, [raffles, search]);
+
+  const totalSold = raffles.reduce((sum, raffle) => sum + raffle.tickets_sold, 0);
+  const totalReserved = raffles.reduce((sum, raffle) => sum + raffle.tickets_reserved, 0);
+  const totalRevenue = raffles.reduce((sum, raffle) => {
+    const price = Number.parseFloat(raffle.ticket_price);
+    return sum + (Number.isFinite(price) ? price * raffle.tickets_sold : 0);
+  }, 0);
+
   return (
     <section className="page">
-      <div className="hero center">
-        <p className="eyebrow">Panel de rifas</p>
-        <h1>Gestiona tus rifas con una interfaz limpia y centralizada.</h1>
-        <p className="subtitle">
-          Crea nuevas rifas, revisa su progreso y acompaña el flujo completo desde un solo lugar.
-        </p>
-        <div className="hero-actions">
-          <Link className="btn btn-primary" to="/create">
-            Crear rifa
-          </Link>
-          <button className="btn btn-ghost" type="button" onClick={() => setStatusFilter("open")}>
-            Ver abiertas
-          </button>
-        </div>
-      </div>
+      {mode === "sell" ? (
+        <>
+          <div className="hero">
+            <div>
+              <p className="eyebrow">Panel vendedor</p>
+              <h1>Gestiona tus rifas con un tablero claro y accionable.</h1>
+              <p className="subtitle">
+                Controla ventas, reservas y estado de sorteo desde un solo lugar.
+              </p>
+            </div>
+            <div className="hero-actions">
+              <Link className="btn btn-primary" to="/create">
+                Crear rifa
+              </Link>
+              <Link className="btn btn-ghost" to="/sell/raffles">
+                Ver mis rifas
+              </Link>
+            </div>
+          </div>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <p>Rifas activas</p>
+              <strong>{raffles.filter((raffle) => raffle.status === "open").length}</strong>
+            </div>
+            <div className="stat-card">
+              <p>Boletos vendidos</p>
+              <strong>{totalSold}</strong>
+            </div>
+            <div className="stat-card">
+              <p>Reservas vigentes</p>
+              <strong>{totalReserved}</strong>
+            </div>
+            <div className="stat-card highlight">
+              <p>Ingreso demo</p>
+              <strong>{formatMoney(totalRevenue, "COP")}</strong>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="hero">
+            <div>
+              <p className="eyebrow">Explorar rifas</p>
+              <h1>Elige tus numeros con calma y compra en modo demo.</h1>
+              <p className="subtitle">
+                Tu saldo simulado esta listo para probar el flujo completo de compra.
+              </p>
+            </div>
+            <div className="hero-actions">
+              <div className="balance-card">
+                <p>Saldo demo</p>
+                <strong>{formatMoney(balance, "COP")}</strong>
+              </div>
+              <Link className="btn btn-ghost" to="/wallet">
+                Administrar saldo
+              </Link>
+            </div>
+          </div>
+        </>
+      )}
 
-      <div className="section-header" id="catalogo">
+      <div className="section-header split">
         <div>
-          <h2>Catalogo de rifas</h2>
-          <p>Explora, revisa progreso y compra boletos en segundos.</p>
+          <h2>{mode === "sell" ? "Estado general" : "Rifas disponibles"}</h2>
+          <p>{mode === "sell" ? "Revisa el progreso de cada rifa." : "Selecciona tu rifa favorita."}</p>
         </div>
         <div className="filters">
           {[
@@ -88,6 +145,7 @@ const HomePage = () => {
             { value: "open", label: "Abiertas" },
             { value: "closed", label: "Cerradas" },
             { value: "drawn", label: "Sorteadas" },
+            { value: "draft", label: "Borradores" },
           ].map((filter) => (
             <button
               key={filter.value}
@@ -100,19 +158,27 @@ const HomePage = () => {
           ))}
         </div>
       </div>
+      <div className="search-row">
+        <input
+          className="input"
+          placeholder="Buscar por titulo o descripcion"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      </div>
 
       {loading ? (
         <div className="state">Cargando rifas...</div>
       ) : error ? (
         <div className="state error">{error}</div>
-      ) : raffles.length === 0 ? (
+      ) : filteredRaffles.length === 0 ? (
         <div className="state">Aun no hay rifas para mostrar.</div>
       ) : (
         <div className="raffle-grid">
-          {raffles.map((raffle, index) => {
+          {filteredRaffles.map((raffle) => {
             const progress = Math.min(100, (raffle.tickets_sold / raffle.total_tickets) * 100);
             return (
-              <article className="raffle-card" style={{ animationDelay: `${index * 0.05}s` }} key={raffle.id}>
+              <article className="raffle-card" key={raffle.id}>
                 <div className="raffle-card-header">
                   <span className={`status-pill status-${raffle.status}`}>{raffle.status}</span>
                   <span className="price">{formatMoney(raffle.ticket_price, raffle.currency)}</span>
@@ -124,9 +190,13 @@ const HomePage = () => {
                 </div>
                 <div className="progress-meta">
                   <span>
-                    {raffle.tickets_sold} / {raffle.total_tickets} boletos vendidos
+                    {raffle.tickets_sold} / {raffle.total_tickets} vendidos
                   </span>
                   <span>{Math.round(progress)}%</span>
+                </div>
+                <div className="raffle-meta">
+                  <span>Numero {raffle.number_start}</span>
+                  <span>Sorteo {formatDate(raffle.draw_at)}</span>
                 </div>
                 <Link className="btn btn-primary btn-small" to={`/raffles/${raffle.id}`}>
                   Ver detalle

@@ -156,7 +156,7 @@ jobs:
           fi
           git fetch --tags
           if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-            echo "Tag already exists: $TAG_NAME" >&2
+            echo "Tag already exists in frontend repo: $TAG_NAME" >&2
             exit 1
           fi
           git config user.email "$TAGGER_EMAIL"

@@ -2,15 +2,11 @@ import type {
   Purchase,
   PurchaseConfirmRequest,
   PurchaseConfirmResponse,
-  Raffle,
-  RaffleCreate,
   RaffleCreateV2,
   RaffleNumbersResponse,
   RaffleV2,
   ReservationRequest,
   ReservationResponse,
-  TicketPurchaseRequest,
-  TicketPurchaseResponse,
   User,
 } from "../types";
 
@@ -60,19 +56,6 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
   return response.json() as Promise<T>;
 };
 
-export const listRaffles = (status?: string) => {
-  const query = status ? `?status=${encodeURIComponent(status)}` : "";
-  return request<Raffle[]>(`/raffles${query}`);
-};
-
-export const getRaffle = (id: string) => request<Raffle>(`/raffles/${id}`);
-
-export const createRaffle = (payload: RaffleCreate) =>
-  request<Raffle>("/raffles", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-
 export const listRafflesV2 = (status?: string) => {
   const query = status ? `?status=${encodeURIComponent(status)}` : "";
   return request<RaffleV2[]>(`/v2/raffles${query}`);
@@ -118,12 +101,6 @@ export const releaseReservation = (raffleId: string, reservation_id: string) =>
 
 export const listPurchases = (participantId: string) =>
   request<Purchase[]>(`/v2/participants/${participantId}/purchases`);
-
-export const purchaseTickets = (raffleId: string, payload: TicketPurchaseRequest) =>
-  request<TicketPurchaseResponse>(`/raffles/${raffleId}/tickets`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
 
 export const registerUser = (payload: { name: string; email: string; password: string }) =>
   request<User>("/auth/register", {

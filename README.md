@@ -1,6 +1,6 @@
 # RifaApp Front
 
-Frontend en React + TypeScript + Vite para consumir el backend de RifaApp.
+Frontend en React + TypeScript + Vite para consumir el backend de RifaApp (API v2).
 
 ## Requisitos
 - Node.js 18+
@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Configura el backend con:
+Configura el backend con (API v2):
 ```
 VITE_API_BASE_URL=http://localhost:8000/rifaapp
 ```

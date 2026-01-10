@@ -12,7 +12,7 @@ import type {
 
 const DEFAULT_API_BASE = "http://localhost:8000/rifaapp";
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE).replace(/\/$/, "");
-const API_V2_PREFIX = API_BASE_URL.includes("/v2/") ? "" : "/v2";
+const API_V2_PREFIX = API_BASE_URL.endsWith("/v2") ? "" : "/v2";
 const v2Path = (path: string) => `${API_V2_PREFIX}${path}`;
 
 class ApiError extends Error {

@@ -83,6 +83,12 @@ export const updateRaffleV2 = (raffleId: string, payload: RaffleUpdateV2, userId
     headers: userId ? { "X-User-Id": userId } : undefined,
   });
 
+export const deleteRaffleV2 = (raffleId: string, userId?: string) =>
+  request<{ status: string; raffle_id: string }>(v2Path(`/raffles/${raffleId}`), {
+    method: "DELETE",
+    headers: userId ? { "X-User-Id": userId } : undefined,
+  });
+
 export const getRaffleNumbers = (raffleId: string, offset = 0, limit?: number) => {
   const query = new URLSearchParams();
   if (offset) {

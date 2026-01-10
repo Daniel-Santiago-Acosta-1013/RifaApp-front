@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Alert,
   Button,
   Chip,
   Divider,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Grid,
   LinearProgress,
   Paper,
@@ -17,6 +21,7 @@ import {
 
 import {
   confirmPurchase,
+  deleteRaffleV2,
   getRaffleNumbers,
   getRaffleV2,
   releaseReservation,
@@ -40,6 +45,7 @@ const statusColorMap: Record<string, "default" | "success" | "warning" | "info">
 
 const RaffleDetailPage = () => {
   const { raffleId } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { balance, debit } = useApp();
   const [raffle, setRaffle] = useState<RaffleV2 | null>(null);
@@ -59,6 +65,10 @@ const RaffleDetailPage = () => {
   const [editStatus, setEditStatus] = useState("open");
   const [editError, setEditError] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteInput, setDeleteInput] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const toDateTimeInput = (value?: string | null) => {
     if (!value) {
@@ -297,6 +307,38 @@ const RaffleDetailPage = () => {
     }
   };
 
+  const openDelete = () => {
+    setDeleteInput("");
+    setDeleteError(null);
+    setDeleteOpen(true);
+  };
+
+  const closeDelete = () => {
+    if (!deleting) {
+      setDeleteOpen(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!raffle || !user) {
+      return;
+    }
+    if (deleteInput !== raffle.title) {
+      setDeleteError("Escribe el titulo exacto para confirmar.");
+      return;
+    }
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteRaffleV2(raffle.id, user.id);
+      navigate("/sell/raffles", { replace: true });
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "No se pudo eliminar la rifa");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (!user) {
     return (
       <Onboarding
@@ -436,6 +478,18 @@ const RaffleDetailPage = () => {
                     </>
                   )}
                 </Stack>
+                <Divider />
+                <Stack spacing={2}>
+                  <Typography variant="subtitle2" color="error">
+                    Eliminar rifa
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Esta accion es permanente y elimina la rifa, sus numeros y compras asociadas.
+                  </Typography>
+                  <Button color="error" variant="outlined" onClick={openDelete}>
+                    Eliminar rifa
+                  </Button>
+                </Stack>
               </>
             )}
             <Button variant="text" color="inherit" href="/">
@@ -524,6 +578,39 @@ const RaffleDetailPage = () => {
           </Stack>
         </Paper>
       </Grid>
+
+      <Dialog open={deleteOpen} onClose={closeDelete} fullWidth maxWidth="sm">
+        <DialogTitle>Eliminar rifa</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              Esta accion no se puede deshacer. Para confirmar, escribe el titulo exacto de la rifa:
+            </Typography>
+            <Typography variant="subtitle2">{raffle.title}</Typography>
+            <TextField
+              label="Escribe el titulo para confirmar"
+              value={deleteInput}
+              onChange={(event) => setDeleteInput(event.target.value)}
+              fullWidth
+              autoFocus
+            />
+            {deleteError && <Alert severity="error">{deleteError}</Alert>}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="text" onClick={closeDelete} disabled={deleting}>
+            Cancelar
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={handleDelete}
+            disabled={deleting || deleteInput !== raffle.title}
+          >
+            {deleting ? "Eliminando..." : "Eliminar definitivamente"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Grid>
   );
 };

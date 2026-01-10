@@ -1,5 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import {
+  Alert,
+  Button,
+  Chip,
+  Divider,
+  Grid,
+  LinearProgress,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 
 import { confirmPurchase, getRaffleNumbers, getRaffleV2, releaseReservation, reserveNumbers } from "../api/client";
 import NumberGrid from "../components/NumberGrid";
@@ -9,6 +20,13 @@ import { useAuth } from "../context/AuthContext";
 import type { PurchaseConfirmResponse, RaffleNumber, RaffleV2, ReservationResponse } from "../types";
 import { formatDate, formatMoney } from "../utils/format";
 import { setParticipantId } from "../utils/participants";
+
+const statusColorMap: Record<string, "default" | "success" | "warning" | "info"> = {
+  open: "success",
+  closed: "warning",
+  drawn: "info",
+  draft: "default",
+};
 
 const RaffleDetailPage = () => {
   const { raffleId } = useParams();
@@ -80,7 +98,7 @@ const RaffleDetailPage = () => {
       setTimeLeft(`${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`);
     }, 1000);
     return () => window.clearInterval(interval);
-  }, [reservation]);
+  }, [reservation, raffleId]);
 
   const totalSelected = useMemo(() => {
     const price = raffle ? Number.parseFloat(raffle.ticket_price) : 0;
@@ -200,123 +218,149 @@ const RaffleDetailPage = () => {
   }
 
   if (loading) {
-    return <div className="state">Cargando rifa...</div>;
+    return (
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="body2" color="text.secondary">
+          Cargando rifa...
+        </Typography>
+      </Paper>
+    );
   }
 
   if (error || !raffle) {
-    return <div className="state error">{error || "Rifa no encontrada"}</div>;
+    return <Alert severity="error">{error || "Rifa no encontrada"}</Alert>;
   }
 
   const progress = Math.min(100, (raffle.tickets_sold / raffle.total_tickets) * 100);
   const isOpen = raffle.status === "open";
 
   return (
-    <section className="page">
-      <div className="detail-grid">
-        <div className="card">
-          <div className="raffle-card-header">
-            <span className={`status-pill status-${raffle.status}`}>{raffle.status}</span>
-            <span className="price">{formatMoney(raffle.ticket_price, raffle.currency)}</span>
-          </div>
-          <h2>{raffle.title}</h2>
-          <p>{raffle.description || "Esta rifa espera tu toque creativo."}</p>
-          <div className="progress">
-            <div className="progress-bar" style={{ width: `${progress}%` }} />
-          </div>
-          <div className="progress-meta">
-            <span>
-              {raffle.tickets_sold} / {raffle.total_tickets} vendidos
-            </span>
-            <span>{Math.round(progress)}%</span>
-          </div>
-          <div className="detail-meta">
-            <div>
-              <span>Inicio</span>
-              <strong>#{raffle.number_start}</strong>
-            </div>
-            <div>
-              <span>Fin</span>
-              <strong>#{raffle.number_end}</strong>
-            </div>
-            <div>
-              <span>Sorteo</span>
-              <strong>{formatDate(raffle.draw_at)}</strong>
-            </div>
-            <div>
-              <span>Reservados</span>
-              <strong>{raffle.tickets_reserved}</strong>
-            </div>
-          </div>
-          <Link className="btn btn-ghost" to="/">
-            Volver al catalogo
-          </Link>
-        </div>
+    <Grid container spacing={3} sx={{ width: "100%" }}>
+      <Grid size={{ xs: 12, md: 5 }}>
+        <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 4 }}>
+          <Stack spacing={2}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Chip label={raffle.status} color={statusColorMap[raffle.status] ?? "default"} size="small" />
+              <Typography variant="subtitle1" color="text.secondary">
+                {formatMoney(raffle.ticket_price, raffle.currency)}
+              </Typography>
+            </Stack>
+            <Typography variant="h4">{raffle.title}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {raffle.description || "Esta rifa espera tu toque creativo."}
+            </Typography>
+            <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 999 }} />
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="caption" color="text.secondary">
+                {raffle.tickets_sold} / {raffle.total_tickets} vendidos
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {Math.round(progress)}%
+              </Typography>
+            </Stack>
+            <Divider />
+            <Grid container spacing={2}>
+              {[
+                { label: "Inicio", value: `#${raffle.number_start}` },
+                { label: "Fin", value: `#${raffle.number_end}` },
+                { label: "Sorteo", value: formatDate(raffle.draw_at) },
+                { label: "Reservados", value: raffle.tickets_reserved },
+              ].map((item) => (
+                <Grid size={6} key={item.label}>
+                  <Typography variant="caption" color="text.secondary">
+                    {item.label}
+                  </Typography>
+                  <Typography variant="subtitle2">{item.value}</Typography>
+                </Grid>
+              ))}
+            </Grid>
+            <Button variant="text" color="inherit" href="/">
+              Volver al catalogo
+            </Button>
+          </Stack>
+        </Paper>
+      </Grid>
 
-        <div className="card purchase-card">
-          <h3>Selecciona tus numeros</h3>
-          {!isOpen && <p className="state">Esta rifa ya no acepta compras.</p>}
-          <NumberGrid
-            numbers={numbers}
-            selectedNumbers={selectedNumbers}
-            reservedNumbers={reservation?.numbers}
-            onToggle={toggleNumber}
-            disabled={!isOpen || Boolean(reservation)}
-          />
-          <div className="selection-summary">
-            <div>
-              <span>Seleccionados</span>
-              <strong>{selectedNumbers.length}</strong>
-            </div>
-            <div>
-              <span>Total</span>
-              <strong>{formatMoney(totalSelected, raffle.currency)}</strong>
-            </div>
-          </div>
-          {reservation && (
-            <div className="reservation-banner">
-              <span>Reserva activa</span>
-              <strong>{timeLeft || "00:00"}</strong>
-            </div>
-          )}
-          {purchaseError && <div className="state error">{purchaseError}</div>}
-          {!reservation && (
-            <button className="btn btn-primary" type="button" onClick={handleReserve} disabled={!isOpen || processing}>
-              {processing ? "Reservando..." : "Reservar numeros"}
-            </button>
-          )}
-          {reservation && !purchase && (
-            <div className="form-actions">
-              <button className="btn btn-ghost" type="button" onClick={handleRelease} disabled={processing}>
-                Cancelar reserva
-              </button>
-              <button className="btn btn-primary" type="button" onClick={handleConfirm} disabled={processing}>
-                {processing ? "Confirmando..." : "Confirmar compra"}
-              </button>
-            </div>
-          )}
-          {purchase && (
-            <div className="review">
-              <p className="review-title">Compra completada</p>
-              <p className="review-note">Estos numeros quedan guardados para el sorteo.</p>
-              <div className="ticket-list">
-                {purchase.numbers.map((number) => (
-                  <span key={number} className="ticket-chip">
-                    {number}
-                  </span>
-                ))}
-              </div>
-              <div className="review-row">
-                <span>Total pagado</span>
-                <strong>{formatMoney(purchase.total_price, purchase.currency)}</strong>
-              </div>
-              <Link className="btn btn-ghost btn-small" to="/purchases">
-                Ver mis compras
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
+      <Grid size={{ xs: 12, md: 7 }}>
+        <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 4 }}>
+          <Stack spacing={2}>
+            <Typography variant="h5">Selecciona tus numeros</Typography>
+            {!isOpen && <Alert severity="info">Esta rifa ya no acepta compras.</Alert>}
+            <NumberGrid
+              numbers={numbers}
+              selectedNumbers={selectedNumbers}
+              reservedNumbers={reservation?.numbers}
+              onToggle={toggleNumber}
+              disabled={!isOpen || Boolean(reservation)}
+            />
+            <Stack direction="row" justifyContent="space-between">
+              <Stack>
+                <Typography variant="caption" color="text.secondary">
+                  Seleccionados
+                </Typography>
+                <Typography variant="h6">{selectedNumbers.length}</Typography>
+              </Stack>
+              <Stack alignItems="flex-end">
+                <Typography variant="caption" color="text.secondary">
+                  Total
+                </Typography>
+                <Typography variant="h6">{formatMoney(totalSelected, raffle.currency)}</Typography>
+              </Stack>
+            </Stack>
+            {reservation && (
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                  <Typography variant="subtitle2">Reserva activa</Typography>
+                  <Chip label={timeLeft || "00:00"} color="warning" />
+                </Stack>
+              </Paper>
+            )}
+            {purchaseError && <Alert severity="error">{purchaseError}</Alert>}
+            {!reservation && (
+              <Button variant="contained" onClick={handleReserve} disabled={!isOpen || processing}>
+                {processing ? "Reservando..." : "Reservar numeros"}
+              </Button>
+            )}
+            {reservation && !purchase && (
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                <Button variant="outlined" onClick={handleRelease} disabled={processing}>
+                  Cancelar reserva
+                </Button>
+                <Button variant="contained" onClick={handleConfirm} disabled={processing}>
+                  {processing ? "Confirmando..." : "Confirmar compra"}
+                </Button>
+              </Stack>
+            )}
+            {purchase && (
+              <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+                <Stack spacing={2}>
+                  <Typography variant="subtitle1">Compra completada</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Estos numeros quedan guardados para el sorteo.
+                  </Typography>
+                  <Stack direction="row" flexWrap="wrap" spacing={1}>
+                    {purchase.numbers.map((number) => (
+                      <Chip key={number} label={number} />
+                    ))}
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography variant="caption" color="text.secondary">
+                      Total pagado
+                    </Typography>
+                    <Typography variant="subtitle2">
+                      {formatMoney(purchase.total_price, purchase.currency)}
+                    </Typography>
+                  </Stack>
+                  <Button variant="text" href="/purchases">
+                    Ver mis compras
+                  </Button>
+                </Stack>
+              </Paper>
+            )}
+          </Stack>
+        </Paper>
+      </Grid>
+    </Grid>
   );
 };
 

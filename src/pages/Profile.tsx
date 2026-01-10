@@ -1,9 +1,12 @@
+import { Button, Divider, Paper, Stack, Typography } from "@mui/material";
+
+import Onboarding from "../components/Onboarding";
+import PageHeader from "../components/PageHeader";
+import ModeSwitch from "../components/ModeSwitch";
 import { useApp } from "../context/AppContext";
 import { useAuth } from "../context/AuthContext";
 import { formatMoney } from "../utils/format";
 import { getParticipantId } from "../utils/participants";
-import Onboarding from "../components/Onboarding";
-import ModeSwitch from "../components/ModeSwitch";
 
 const ProfilePage = () => {
   const { user, logout } = useAuth();
@@ -21,47 +24,63 @@ const ProfilePage = () => {
   const participantId = getParticipantId(user.email);
 
   return (
-    <section className="page">
-      <div className="section-header">
-        <p className="eyebrow">Perfil</p>
-        <h2>Tu cuenta y preferencias</h2>
-        <p className="subtitle">Administra tu modo y revisa tu saldo demo.</p>
-      </div>
+    <Stack spacing={4}>
+      <PageHeader
+        eyebrow="Perfil"
+        title="Tu cuenta y preferencias"
+        subtitle="Administra tu modo y revisa tu saldo demo."
+      />
 
-      <div className="card profile-card">
-        <div className="profile-row">
-          <div>
-            <span>Nombre</span>
-            <strong>{user.name}</strong>
-          </div>
-          <div>
-            <span>Email</span>
-            <strong>{user.email}</strong>
-          </div>
-        </div>
-        <div className="profile-row">
-          <div>
-            <span>Saldo demo</span>
-            <strong>{formatMoney(balance, "COP")}</strong>
-          </div>
-          <div>
-            <span>Participante</span>
-            <strong>{participantId || "Sin compras aun"}</strong>
-          </div>
-        </div>
-        <div className="profile-row">
-          <div>
-            <span>Modo actual</span>
-            <ModeSwitch />
-          </div>
-          <div>
-            <button className="btn btn-ghost" type="button" onClick={logout}>
+      <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 4 }}>
+        <Stack spacing={3}>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={4} justifyContent="space-between">
+            <Stack spacing={1}>
+              <Typography variant="caption" color="text.secondary">
+                Nombre
+              </Typography>
+              <Typography variant="h6">{user.name}</Typography>
+            </Stack>
+            <Stack spacing={1}>
+              <Typography variant="caption" color="text.secondary">
+                Email
+              </Typography>
+              <Typography variant="h6">{user.email}</Typography>
+            </Stack>
+          </Stack>
+
+          <Divider />
+
+          <Stack direction={{ xs: "column", md: "row" }} spacing={4} justifyContent="space-between">
+            <Stack spacing={1}>
+              <Typography variant="caption" color="text.secondary">
+                Saldo demo
+              </Typography>
+              <Typography variant="h6">{formatMoney(balance, "COP")}</Typography>
+            </Stack>
+            <Stack spacing={1}>
+              <Typography variant="caption" color="text.secondary">
+                Participante
+              </Typography>
+              <Typography variant="h6">{participantId || "Sin compras aun"}</Typography>
+            </Stack>
+          </Stack>
+
+          <Divider />
+
+          <Stack direction={{ xs: "column", md: "row" }} spacing={3} justifyContent="space-between" alignItems="center">
+            <Stack spacing={1}>
+              <Typography variant="caption" color="text.secondary">
+                Modo actual
+              </Typography>
+              <ModeSwitch />
+            </Stack>
+            <Button variant="outlined" color="inherit" onClick={logout}>
               Cerrar sesion
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
+            </Button>
+          </Stack>
+        </Stack>
+      </Paper>
+    </Stack>
   );
 };
 

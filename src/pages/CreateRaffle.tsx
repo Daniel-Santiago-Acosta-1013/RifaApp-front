@@ -1,8 +1,23 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import {
+  Alert,
+  Box,
+  Button,
+  Divider,
+  Paper,
+  Stack,
+  Step,
+  StepLabel,
+  Stepper,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from "@mui/material";
 
 import { createRaffleV2 } from "../api/client";
 import Onboarding from "../components/Onboarding";
+import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
 import { formatMoney } from "../utils/format";
 
@@ -13,6 +28,8 @@ const numberFormats = [
   { id: "1-1000", label: "1 - 1000", number_start: 1, number_padding: null, total_tickets: 1000 },
   { id: "custom", label: "Personalizado", number_start: 1, number_padding: null, total_tickets: 50 },
 ];
+
+const steps = ["Idea", "Numeros", "Fecha", "Confirmar"];
 
 const CreateRafflePage = () => {
   const { user } = useAuth();
@@ -92,221 +109,234 @@ const CreateRafflePage = () => {
   };
 
   return (
-    <section className="page">
-      <div className="section-header">
-        <p className="eyebrow">Nueva rifa</p>
-        <h2>Crea tu rifa paso a paso</h2>
-        <p className="subtitle">Define historia, numeros, precio y fecha en minutos.</p>
-      </div>
+    <Stack spacing={4}>
+      <PageHeader
+        eyebrow="Nueva rifa"
+        title="Crea tu rifa paso a paso"
+        subtitle="Define historia, numeros, precio y fecha en minutos."
+      />
 
-      <div className="wizard">
-        <div className="wizard-steps">
-          {["Idea", "Numeros", "Fecha", "Confirmar"].map((label, index) => (
-            <div key={label} className={`wizard-step ${step === index + 1 ? "active" : ""}`}>
-              <span>{index + 1}</span>
-              <p>{label}</p>
-            </div>
-          ))}
-        </div>
+      <Stepper activeStep={step - 1} alternativeLabel>
+        {steps.map((label) => (
+          <Step key={label}>
+            <StepLabel>{label}</StepLabel>
+          </Step>
+        ))}
+      </Stepper>
 
-        {step === 1 && (
-          <div className="card form">
-            <div className="field">
-              <label>Titulo</label>
-              <input
-                className="input"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="Ej. Rifa iPhone 15"
-                required
-              />
-            </div>
-            <div className="field">
-              <label>Descripcion</label>
-              <textarea
-                className="input textarea"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                placeholder="Cuenta por que esta rifa es especial."
-              />
-            </div>
-            <div className="form-actions">
-              <button className="btn btn-primary" type="button" onClick={goNext} disabled={!title.trim()}>
+      {step === 1 && (
+        <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 4 }}>
+          <Stack spacing={3}>
+            <TextField
+              label="Titulo"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Ej. Rifa iPhone 15"
+              required
+              fullWidth
+            />
+            <TextField
+              label="Descripcion"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="Cuenta por que esta rifa es especial."
+              multiline
+              minRows={4}
+              fullWidth
+            />
+            <Stack direction="row" justifyContent="flex-end">
+              <Button variant="contained" onClick={goNext} disabled={!title.trim()}>
                 Continuar
-              </button>
-            </div>
-          </div>
-        )}
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      )}
 
-        {step === 2 && (
-          <div className="card form">
-            <div className="form-row">
-              <div className="field">
-                <label>Precio por numero (COP)</label>
-                <input
-                  className="input"
-                  type="number"
-                  min="1000"
-                  step="500"
-                  value={ticketPrice}
-                  onChange={(event) => setTicketPrice(event.target.value)}
-                  required
-                />
-              </div>
-              <div className="field">
-                <label>Moneda</label>
-                <input
-                  className="input"
-                  value={currency}
-                  onChange={(event) => setCurrency(event.target.value)}
-                  maxLength={3}
-                />
-              </div>
-            </div>
-            <div className="field">
-              <label>Formato de numeros</label>
-              <div className="chip-grid">
-                {numberFormats.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={`chip ${formatId === item.id ? "active" : ""}`}
-                    onClick={() => handleFormatChange(item.id)}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {format?.id === "custom" && (
-              <div className="form-row">
-                <div className="field">
-                  <label>Numero inicial</label>
-                  <input
-                    className="input"
-                    type="number"
-                    value={numberStart}
-                    onChange={(event) => setNumberStart(event.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>Relleno (digitos)</label>
-                  <input
-                    className="input"
-                    type="number"
-                    min="1"
-                    value={numberPadding}
-                    onChange={(event) => setNumberPadding(event.target.value)}
-                  />
-                </div>
-              </div>
-            )}
-            <div className="field">
-              <label>Total de numeros</label>
-              <input
-                className="input"
+      {step === 2 && (
+        <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 4 }}>
+          <Stack spacing={3}>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+              <TextField
+                label="Precio por numero (COP)"
                 type="number"
-                min="1"
-                value={totalTickets}
-                onChange={(event) => setTotalTickets(event.target.value)}
+                fullWidth
+                value={ticketPrice}
+                onChange={(event) => setTicketPrice(event.target.value)}
+                inputProps={{ min: 1000, step: 500 }}
               />
-            </div>
-            <div className="summary-card">
-              <span>Recaudo estimado</span>
-              <strong>{formatMoney(totalPreview, currency)}</strong>
-            </div>
-            <div className="form-actions">
-              <button className="btn btn-ghost" type="button" onClick={goBack}>
+              <TextField
+                label="Moneda"
+                fullWidth
+                value={currency}
+                onChange={(event) => setCurrency(event.target.value)}
+                inputProps={{ maxLength: 3 }}
+              />
+            </Stack>
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Formato de numeros
+              </Typography>
+              <ToggleButtonGroup
+                value={formatId}
+                exclusive
+                onChange={(_, value) => value && handleFormatChange(value)}
+                sx={{
+                  flexWrap: "wrap",
+                  gap: 1,
+                  "& .MuiToggleButton-root": {
+                    borderRadius: 999,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    textTransform: "none",
+                    px: 2,
+                  },
+                }}
+              >
+                {numberFormats.map((item) => (
+                  <ToggleButton key={item.id} value={item.id}>
+                    {item.label}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </Box>
+            {format?.id === "custom" && (
+              <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+                <TextField
+                  label="Numero inicial"
+                  type="number"
+                  fullWidth
+                  value={numberStart}
+                  onChange={(event) => setNumberStart(event.target.value)}
+                />
+                <TextField
+                  label="Relleno (digitos)"
+                  type="number"
+                  fullWidth
+                  value={numberPadding}
+                  onChange={(event) => setNumberPadding(event.target.value)}
+                  inputProps={{ min: 1 }}
+                />
+              </Stack>
+            )}
+            <TextField
+              label="Total de numeros"
+              type="number"
+              fullWidth
+              value={totalTickets}
+              onChange={(event) => setTotalTickets(event.target.value)}
+              inputProps={{ min: 1 }}
+            />
+            <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+              <Typography variant="caption" color="text.secondary">
+                Recaudo estimado
+              </Typography>
+              <Typography variant="h5">{formatMoney(totalPreview, currency)}</Typography>
+            </Paper>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button variant="text" onClick={goBack}>
                 Volver
-              </button>
-              <button className="btn btn-primary" type="button" onClick={goNext}>
+              </Button>
+              <Button variant="contained" onClick={goNext}>
                 Continuar
-              </button>
-            </div>
-          </div>
-        )}
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      )}
 
-        {step === 3 && (
-          <div className="card form">
-            <div className="field">
-              <label>Fecha del sorteo (opcional)</label>
-              <input
-                className="input"
-                type="datetime-local"
-                value={drawAt}
-                onChange={(event) => setDrawAt(event.target.value)}
-              />
-            </div>
-            <div className="field">
-              <label>Estado inicial</label>
-              <div className="chip-grid">
+      {step === 3 && (
+        <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 4 }}>
+          <Stack spacing={3}>
+            <TextField
+              label="Fecha del sorteo (opcional)"
+              type="datetime-local"
+              value={drawAt}
+              onChange={(event) => setDrawAt(event.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Estado inicial
+              </Typography>
+              <ToggleButtonGroup
+                value={status}
+                exclusive
+                onChange={(_, value) => value && setStatus(value)}
+                sx={{
+                  gap: 1,
+                  "& .MuiToggleButton-root": {
+                    borderRadius: 999,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    textTransform: "none",
+                    px: 2,
+                  },
+                }}
+              >
                 {[
                   { value: "open", label: "Publicar ahora" },
                   { value: "draft", label: "Guardar borrador" },
                 ].map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    className={`chip ${status === item.value ? "active" : ""}`}
-                    onClick={() => setStatus(item.value)}
-                  >
+                  <ToggleButton key={item.value} value={item.value}>
                     {item.label}
-                  </button>
+                  </ToggleButton>
                 ))}
-              </div>
-            </div>
-            <div className="form-actions">
-              <button className="btn btn-ghost" type="button" onClick={goBack}>
+              </ToggleButtonGroup>
+            </Box>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button variant="text" onClick={goBack}>
                 Volver
-              </button>
-              <button className="btn btn-primary" type="button" onClick={goNext}>
+              </Button>
+              <Button variant="contained" onClick={goNext}>
                 Revisar
-              </button>
-            </div>
-          </div>
-        )}
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      )}
 
-        {step === 4 && (
-          <div className="card form">
-            <h3>Resumen final</h3>
-            <div className="review-row">
-              <span>Titulo</span>
-              <strong>{title || "Sin titulo"}</strong>
-            </div>
-            <div className="review-row">
-              <span>Formato</span>
-              <strong>{format?.label}</strong>
-            </div>
-            <div className="review-row">
-              <span>Precio</span>
-              <strong>{formatMoney(ticketPrice, currency)}</strong>
-            </div>
-            <div className="review-row">
-              <span>Total numeros</span>
-              <strong>{totalTickets}</strong>
-            </div>
-            <div className="review-row">
-              <span>Sorteo</span>
-              <strong>{drawAt || "Sin fecha"}</strong>
-            </div>
-            {error && <div className="state error">{error}</div>}
+      {step === 4 && (
+        <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 4 }}>
+          <Stack spacing={3}>
+            <Typography variant="h5">Resumen final</Typography>
+            <Divider />
+            {[
+              { label: "Titulo", value: title || "Sin titulo" },
+              { label: "Formato", value: format?.label || "Sin formato" },
+              { label: "Precio", value: formatMoney(ticketPrice, currency) },
+              { label: "Total numeros", value: totalTickets },
+              { label: "Sorteo", value: drawAt || "Sin fecha" },
+            ].map((row) => (
+              <Stack key={row.label} direction="row" justifyContent="space-between">
+                <Typography variant="body2" color="text.secondary">
+                  {row.label}
+                </Typography>
+                <Typography variant="subtitle2">{row.value}</Typography>
+              </Stack>
+            ))}
+            {error && <Alert severity="error">{error}</Alert>}
             {createdId && (
-              <div className="state success">
-                Rifa creada con exito. <Link to={`/raffles/${createdId}`}>Ver detalle</Link>
-              </div>
+              <Alert severity="success">
+                Rifa creada con exito.{" "}
+                <Button size="small" href={`/raffles/${createdId}`}>
+                  Ver detalle
+                </Button>
+              </Alert>
             )}
-            <div className="form-actions">
-              <button className="btn btn-ghost" type="button" onClick={goBack} disabled={loading}>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button variant="text" onClick={goBack} disabled={loading}>
                 Volver
-              </button>
-              <button className="btn btn-primary" type="button" onClick={handleSubmit} disabled={loading}>
+              </Button>
+              <Button variant="contained" onClick={handleSubmit} disabled={loading}>
                 {loading ? "Creando..." : "Crear rifa"}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </section>
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      )}
+    </Stack>
   );
 };
 

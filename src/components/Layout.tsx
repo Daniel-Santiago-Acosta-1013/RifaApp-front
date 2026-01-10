@@ -1,115 +1,153 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { useState } from "react";
+import { Outlet } from "react-router-dom";
+import { Logout, Menu } from "@mui/icons-material";
+import {
+  AppBar,
+  Box,
+  Button,
+  Container,
+  Divider,
+  Drawer,
+  IconButton,
+  Paper,
+  Stack,
+  Toolbar,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 
 import { useApp } from "../context/AppContext";
 import { useAuth } from "../context/AuthContext";
 import BottomNav from "./BottomNav";
+import Brand from "./Brand";
 import ModeSwitch from "./ModeSwitch";
 import SidebarNav from "./SidebarNav";
+
+const drawerWidth = 280;
 
 const Layout = () => {
   const { user, logout } = useAuth();
   const { mode } = useApp();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleDrawerToggle = () => setMobileOpen((prev) => !prev);
 
   if (!user) {
     return (
-      <div className="public-shell">
-        <header className="public-header">
-          <div className="brand">
-            <span className="brand-mark">R</span>
-            <div>
-              <p className="brand-name">RifaApp</p>
-              <p className="brand-tagline">Rifas estilo colombiano en modo demo.</p>
-            </div>
-          </div>
-        </header>
-        <main className="app-main public-main">
-          <Outlet />
-        </main>
-        <footer className="app-footer">
-          <p>Proyecto de aprendizaje. Compra simulada sin pasarela de pagos.</p>
-        </footer>
-      </div>
+      <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+        <Box component="header" sx={{ px: { xs: 2, md: 4 }, py: 3 }}>
+          <Brand subtitle="Rifas estilo colombiano en modo demo." />
+        </Box>
+        <Box component="main" sx={{ flex: 1 }}>
+          <Container maxWidth="lg">
+            <Outlet />
+          </Container>
+        </Box>
+        <Box component="footer" sx={{ px: { xs: 2, md: 4 }, py: 3, color: "text.secondary" }}>
+          <Typography variant="body2">
+            Proyecto de aprendizaje. Compra simulada sin pasarela de pagos.
+          </Typography>
+        </Box>
+      </Box>
     );
   }
 
-  return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand-block">
-          <div className="brand">
-            <span className="brand-mark">R</span>
-            <div>
-              <p className="brand-name">RifaApp</p>
-              <p className="brand-tagline">Rifas colombianas en modo demo.</p>
-            </div>
-          </div>
-          {user && (
-            <div className="mode-switch-wrapper desktop-only">
-              <ModeSwitch />
-            </div>
-          )}
-        </div>
-        <SidebarNav />
-        <div className="sidebar-footer">
-          {user ? (
-            <>
-              <div className="user-pill">
-                <span>{user.name}</span>
-                <small>{user.email}</small>
-              </div>
-              <button className="btn btn-ghost" onClick={logout} type="button">
-                Salir
-              </button>
-            </>
-          ) : (
-            <>
-              <NavLink className="btn btn-ghost" to="/login">
-                Entrar
-              </NavLink>
-              <NavLink className="btn btn-primary" to="/register">
-                Registro
-              </NavLink>
-            </>
-          )}
-        </div>
-      </aside>
+  const drawerContent = (
+    <Stack sx={{ height: "100%", p: 3 }} spacing={3}>
+      <Brand subtitle="Rifas colombianas en modo demo." />
+      <ModeSwitch />
+      <Divider />
+      <SidebarNav onNavigate={() => setMobileOpen(false)} />
+      <Box sx={{ mt: "auto" }}>
+        <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
+          <Typography variant="subtitle2">{user.name}</Typography>
+          <Typography variant="caption" color="text.secondary">
+            {user.email}
+          </Typography>
+        </Paper>
+        <Button
+          variant="outlined"
+          color="inherit"
+          fullWidth
+          sx={{ mt: 2 }}
+          startIcon={<Logout />}
+          onClick={logout}
+        >
+          Salir
+        </Button>
+      </Box>
+    </Stack>
+  );
 
-      <div className="app-content">
-        <header className="topbar">
-          <div className="brand compact">
-            <span className="brand-mark">R</span>
-            <div>
-              <p className="brand-name">RifaApp</p>
-              <p className="brand-tagline">{mode === "sell" ? "Modo vendedor" : "Modo comprador"}</p>
-            </div>
-          </div>
-          {user && (
-            <div className="mode-switch-wrapper mobile-only">
-              <ModeSwitch />
-            </div>
-          )}
-          <div className="auth-inline">
-            {user ? (
-              <button className="btn btn-ghost" onClick={logout} type="button">
-                Salir
-              </button>
-            ) : (
-              <NavLink className="btn btn-ghost" to="/login">
-                Entrar
-              </NavLink>
+  return (
+    <Box sx={{ display: "flex", minHeight: "100vh" }}>
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: "block", md: "none" },
+          "& .MuiDrawer-paper": { width: drawerWidth, boxSizing: "border-box" },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: "none", md: "block" },
+          width: drawerWidth,
+          flexShrink: 0,
+          "& .MuiDrawer-paper": { width: drawerWidth, boxSizing: "border-box" },
+        }}
+        open
+      >
+        {drawerContent}
+      </Drawer>
+
+      <Box
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+          pb: { xs: 10, md: 0 },
+        }}
+      >
+        <AppBar position="sticky">
+          <Toolbar sx={{ gap: 2 }}>
+            {!isDesktop && (
+              <IconButton color="inherit" onClick={handleDrawerToggle}>
+                <Menu />
+              </IconButton>
             )}
-          </div>
-        </header>
-        <main className="app-main">
-          <Outlet />
-        </main>
-        <footer className="app-footer">
-          <p>Proyecto de aprendizaje. Compra simulada sin pasarela de pagos.</p>
-        </footer>
-      </div>
+            <Brand compact subtitle={mode === "sell" ? "Modo vendedor" : "Modo comprador"} />
+            <Box sx={{ ml: "auto", display: "flex", gap: 2, alignItems: "center" }}>
+              {!isDesktop && <ModeSwitch />}
+              <Button variant="text" color="inherit" onClick={logout} startIcon={<Logout />}>
+                Salir
+              </Button>
+            </Box>
+          </Toolbar>
+        </AppBar>
+        <Box component="main" sx={{ flex: 1, py: { xs: 3, md: 4 } }}>
+          <Container maxWidth="lg">
+            <Outlet />
+          </Container>
+        </Box>
+        <Box component="footer" sx={{ px: { xs: 2, md: 4 }, py: 3, color: "text.secondary" }}>
+          <Typography variant="body2">
+            Proyecto de aprendizaje. Compra simulada sin pasarela de pagos.
+          </Typography>
+        </Box>
+      </Box>
 
       <BottomNav />
-    </div>
+    </Box>
   );
 };
 

@@ -1,6 +1,9 @@
+import type { FormEvent } from "react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { Alert, Button, Paper, Stack, TextField, Typography } from "@mui/material";
 
+import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
 
 const LoginPage = () => {
@@ -11,7 +14,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
@@ -26,42 +29,43 @@ const LoginPage = () => {
   };
 
   return (
-    <section className="page narrow">
-      <div className="section-header">
-        <p className="eyebrow">Acceso</p>
-        <h2>Bienvenido de vuelta</h2>
-        <p className="subtitle">Ingresa para alternar entre comprar y vender rifas.</p>
-      </div>
-      <form className="form card" onSubmit={handleSubmit}>
-        <div className="field">
-          <label>Email</label>
-          <input
-            className="input"
+    <Stack spacing={3} sx={{ maxWidth: 520, mx: "auto" }}>
+      <PageHeader
+        eyebrow="Acceso"
+        title="Bienvenido de vuelta"
+        subtitle="Ingresa para alternar entre comprar y vender rifas."
+      />
+      <Paper component="form" onSubmit={handleSubmit} sx={{ p: 4, borderRadius: 4 }}>
+        <Stack spacing={3}>
+          <TextField
+            label="Email"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
+            fullWidth
           />
-        </div>
-        <div className="field">
-          <label>Contrasena</label>
-          <input
-            className="input"
+          <TextField
+            label="Contrasena"
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required
+            fullWidth
           />
-        </div>
-        {error && <div className="state error">{error}</div>}
-        <button className="btn btn-primary" type="submit" disabled={loading}>
-          {loading ? "Entrando..." : "Entrar"}
-        </button>
-        <p className="form-footer">
-          Aun no tienes cuenta? <Link to="/register">Crea una aqui</Link>
-        </p>
-      </form>
-    </section>
+          {error && <Alert severity="error">{error}</Alert>}
+          <Button variant="contained" type="submit" disabled={loading}>
+            {loading ? "Entrando..." : "Entrar"}
+          </Button>
+          <Typography variant="body2" color="text.secondary">
+            Aun no tienes cuenta?{" "}
+            <Button variant="text" size="small" href="/register">
+              Crea una aqui
+            </Button>
+          </Typography>
+        </Stack>
+      </Paper>
+    </Stack>
   );
 };
 

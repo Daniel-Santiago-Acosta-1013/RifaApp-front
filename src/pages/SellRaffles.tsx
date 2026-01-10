@@ -1,8 +1,20 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import {
+  Alert,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Chip,
+  LinearProgress,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 
 import { listRafflesV2 } from "../api/client";
 import Onboarding from "../components/Onboarding";
+import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
 import type { RaffleV2 } from "../types";
 import { formatDate, formatMoney } from "../utils/format";
@@ -40,60 +52,91 @@ const SellRafflesPage = () => {
   }
 
   return (
-    <section className="page">
-      <div className="section-header">
-        <p className="eyebrow">Mis rifas</p>
-        <h2>Inventario y progreso</h2>
-        <p className="subtitle">Vista general del estado de cada rifa creada.</p>
-      </div>
+    <Stack spacing={4}>
+      <PageHeader
+        eyebrow="Mis rifas"
+        title="Inventario y progreso"
+        subtitle="Vista general del estado de cada rifa creada."
+      />
+
       {loading ? (
-        <div className="state">Cargando rifas...</div>
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="body2" color="text.secondary">
+            Cargando rifas...
+          </Typography>
+        </Paper>
       ) : error ? (
-        <div className="state error">{error}</div>
+        <Alert severity="error">{error}</Alert>
       ) : raffles.length === 0 ? (
-        <div className="state">
-          Aun no tienes rifas creadas. <Link to="/create">Crear primera rifa</Link>
-        </div>
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="body2" color="text.secondary">
+            Aun no tienes rifas creadas.{" "}
+            <Button size="small" href="/create">
+              Crear primera rifa
+            </Button>
+          </Typography>
+        </Paper>
       ) : (
-        <div className="card-list">
+        <Stack spacing={3}>
           {raffles.map((raffle) => {
             const progress = Math.min(100, (raffle.tickets_sold / raffle.total_tickets) * 100);
             return (
-              <article className="card raffle-row" key={raffle.id}>
-                <div>
-                  <span className={`status-pill status-${raffle.status}`}>{raffle.status}</span>
-                  <h3>{raffle.title}</h3>
-                  <p className="subtitle">{raffle.description || "Sin descripcion."}</p>
-                </div>
-                <div className="raffle-row-metrics">
-                  <div>
-                    <span>Vendidos</span>
-                    <strong>{raffle.tickets_sold}</strong>
-                  </div>
-                  <div>
-                    <span>Reservados</span>
-                    <strong>{raffle.tickets_reserved}</strong>
-                  </div>
-                  <div>
-                    <span>Sorteo</span>
-                    <strong>{formatDate(raffle.draw_at)}</strong>
-                  </div>
-                </div>
-                <div className="progress">
-                  <div className="progress-bar" style={{ width: `${progress}%` }} />
-                </div>
-                <div className="raffle-row-footer">
-                  <span>{formatMoney(raffle.ticket_price, raffle.currency)} por numero</span>
-                  <Link className="btn btn-ghost btn-small" to={`/raffles/${raffle.id}`}>
+              <Card key={raffle.id}>
+                <CardContent>
+                  <Stack direction={{ xs: "column", md: "row" }} spacing={3} justifyContent="space-between">
+                    <Stack spacing={1}>
+                      <Chip label={raffle.status} size="small" />
+                      <Typography variant="h6">{raffle.title}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {raffle.description || "Sin descripcion."}
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" spacing={3}>
+                      <Stack spacing={0.5}>
+                        <Typography variant="caption" color="text.secondary">
+                          Vendidos
+                        </Typography>
+                        <Typography variant="subtitle1">{raffle.tickets_sold}</Typography>
+                      </Stack>
+                      <Stack spacing={0.5}>
+                        <Typography variant="caption" color="text.secondary">
+                          Reservados
+                        </Typography>
+                        <Typography variant="subtitle1">{raffle.tickets_reserved}</Typography>
+                      </Stack>
+                      <Stack spacing={0.5}>
+                        <Typography variant="caption" color="text.secondary">
+                          Sorteo
+                        </Typography>
+                        <Typography variant="subtitle1">{formatDate(raffle.draw_at)}</Typography>
+                      </Stack>
+                    </Stack>
+                  </Stack>
+                  <LinearProgress
+                    variant="determinate"
+                    value={progress}
+                    sx={{ height: 8, borderRadius: 999, mt: 2 }}
+                  />
+                  <Stack direction="row" justifyContent="space-between" sx={{ mt: 2 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {formatMoney(raffle.ticket_price, raffle.currency)} por numero
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {Math.round(progress)}% vendido
+                    </Typography>
+                  </Stack>
+                </CardContent>
+                <CardActions sx={{ px: 2, pb: 2 }}>
+                  <Button size="small" variant="outlined" href={`/raffles/${raffle.id}`}>
                     Ver detalle
-                  </Link>
-                </div>
-              </article>
+                  </Button>
+                </CardActions>
+              </Card>
             );
           })}
-        </div>
+        </Stack>
       )}
-    </section>
+    </Stack>
   );
 };
 

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Alert, Button, Card, CardActions, CardContent, Chip, Paper, Stack, Typography } from "@mui/material";
 
 import { listPurchases } from "../api/client";
 import Onboarding from "../components/Onboarding";
+import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
 import type { Purchase } from "../types";
 import { formatDate, formatMoney } from "../utils/format";
@@ -47,55 +48,81 @@ const PurchasesPage = () => {
   }
 
   return (
-    <section className="page">
-      <div className="section-header">
-        <p className="eyebrow">Mis compras</p>
-        <h2>Tus numeros y comprobantes demo</h2>
-        <p className="subtitle">Historial completo de compras simuladas.</p>
-      </div>
+    <Stack spacing={4}>
+      <PageHeader
+        eyebrow="Mis compras"
+        title="Tus numeros y comprobantes demo"
+        subtitle="Historial completo de compras simuladas."
+      />
 
       {loading ? (
-        <div className="state">Cargando compras...</div>
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="body2" color="text.secondary">
+            Cargando compras...
+          </Typography>
+        </Paper>
       ) : error ? (
-        <div className="state error">{error}</div>
+        <Alert severity="error">{error}</Alert>
       ) : purchases.length === 0 ? (
-        <div className="state">
-          Aun no tienes compras registradas. <Link to="/">Explorar rifas</Link>
-        </div>
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="body2" color="text.secondary">
+            Aun no tienes compras registradas.{" "}
+            <Button size="small" href="/">
+              Explorar rifas
+            </Button>
+          </Typography>
+        </Paper>
       ) : (
-        <div className="card-list">
+        <Stack spacing={3}>
           {purchases.map((purchase) => (
-            <article className="card purchase-card" key={purchase.purchase_id}>
-              <div className="purchase-header">
-                <div>
-                  <p className="eyebrow">Compra demo</p>
-                  <h3>{purchase.raffle_title}</h3>
-                  <p className="subtitle">Estado rifa: {purchase.raffle_status}</p>
-                </div>
-                <div className="purchase-total">
-                  <span>Total</span>
-                  <strong>{formatMoney(purchase.total_price, purchase.currency)}</strong>
-                </div>
-              </div>
-              <div className="ticket-list">
-                {purchase.numbers.map((number) => (
-                  <span key={number} className="ticket-chip">
-                    {number}
-                  </span>
-                ))}
-              </div>
-              <div className="purchase-meta">
-                <span>Metodo: {purchase.payment_method || "Demo"}</span>
-                <span>{formatDate(purchase.created_at)}</span>
-              </div>
-              <Link className="btn btn-ghost btn-small" to={`/raffles/${purchase.raffle_id}`}>
-                Ver rifa
-              </Link>
-            </article>
+            <Card key={purchase.purchase_id}>
+              <CardContent>
+                <Stack
+                  direction={{ xs: "column", md: "row" }}
+                  spacing={2}
+                  justifyContent="space-between"
+                  alignItems={{ md: "center" }}
+                >
+                  <Stack spacing={1}>
+                    <Typography variant="overline" color="text.secondary">
+                      Compra demo
+                    </Typography>
+                    <Typography variant="h6">{purchase.raffle_title}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Estado rifa: {purchase.raffle_status}
+                    </Typography>
+                  </Stack>
+                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, textAlign: "right" }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Total
+                    </Typography>
+                    <Typography variant="h6">{formatMoney(purchase.total_price, purchase.currency)}</Typography>
+                  </Paper>
+                </Stack>
+                <Stack direction="row" flexWrap="wrap" spacing={1} sx={{ mt: 2 }}>
+                  {purchase.numbers.map((number) => (
+                    <Chip key={number} label={number} />
+                  ))}
+                </Stack>
+                <Stack direction="row" justifyContent="space-between" sx={{ mt: 2 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Metodo: {purchase.payment_method || "Demo"}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {formatDate(purchase.created_at)}
+                  </Typography>
+                </Stack>
+              </CardContent>
+              <CardActions sx={{ px: 2, pb: 2 }}>
+                <Button size="small" variant="outlined" href={`/raffles/${purchase.raffle_id}`}>
+                  Ver rifa
+                </Button>
+              </CardActions>
+            </Card>
           ))}
-        </div>
+        </Stack>
       )}
-    </section>
+    </Stack>
   );
 };
 

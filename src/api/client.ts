@@ -34,9 +34,13 @@ const parseError = async (response: Response): Promise<string> => {
     if (typeof data?.detail?.message === "string") {
       return data.detail.message;
     }
+    if (typeof data?.message === "string") {
+      return data.message;
+    }
     return JSON.stringify(data);
   }
-  return response.text();
+  const text = await response.text();
+  return text || response.statusText || "Request failed";
 };
 
 const request = async <T>(path: string, options: RequestInit = {}): Promise<T> => {

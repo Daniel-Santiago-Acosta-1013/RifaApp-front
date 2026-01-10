@@ -9,15 +9,25 @@ import {
   LinearProgress,
   Paper,
   Stack,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
 
-import { confirmPurchase, getRaffleNumbers, getRaffleV2, releaseReservation, reserveNumbers } from "../api/client";
+import {
+  confirmPurchase,
+  getRaffleNumbers,
+  getRaffleV2,
+  releaseReservation,
+  reserveNumbers,
+  updateRaffleV2,
+} from "../api/client";
 import NumberGrid from "../components/NumberGrid";
 import Onboarding from "../components/Onboarding";
 import { useApp } from "../context/AppContext";
 import { useAuth } from "../context/AuthContext";
-import type { PurchaseConfirmResponse, RaffleNumber, RaffleV2, ReservationResponse } from "../types";
+import type { PurchaseConfirmResponse, RaffleNumber, RaffleUpdateV2, RaffleV2, ReservationResponse } from "../types";
 import { formatDate, formatMoney } from "../utils/format";
 import { setParticipantId } from "../utils/participants";
 
@@ -42,6 +52,24 @@ const RaffleDetailPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editDrawAt, setEditDrawAt] = useState("");
+  const [editStatus, setEditStatus] = useState("open");
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+
+  const toDateTimeInput = (value?: string | null) => {
+    if (!value) {
+      return "";
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+    return date.toISOString().slice(0, 16);
+  };
 
   useEffect(() => {
     if (!user) {
@@ -208,6 +236,67 @@ const RaffleDetailPage = () => {
     }
   };
 
+  const isOwner = Boolean(user && raffle?.owner_id && user.id === raffle.owner_id);
+
+  const startEdit = () => {
+    if (!raffle) {
+      return;
+    }
+    setEditTitle(raffle.title);
+    setEditDescription(raffle.description ?? "");
+    setEditDrawAt(toDateTimeInput(raffle.draw_at));
+    setEditStatus(raffle.status);
+    setEditError(null);
+    setEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setEditing(false);
+    setEditError(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!raffle || !user) {
+      return;
+    }
+    const trimmedTitle = editTitle.trim();
+    if (!trimmedTitle) {
+      setEditError("El titulo es obligatorio.");
+      return;
+    }
+    const payload: RaffleUpdateV2 = {};
+    if (trimmedTitle !== raffle.title) {
+      payload.title = trimmedTitle;
+    }
+    const trimmedDescription = editDescription.trim();
+    const currentDescription = raffle.description ?? "";
+    if (trimmedDescription !== currentDescription) {
+      payload.description = trimmedDescription ? trimmedDescription : null;
+    }
+    const currentDrawAt = toDateTimeInput(raffle.draw_at);
+    if (editDrawAt !== currentDrawAt) {
+      payload.draw_at = editDrawAt ? new Date(editDrawAt).toISOString() : null;
+    }
+    if (editStatus && editStatus !== raffle.status) {
+      payload.status = editStatus;
+    }
+    if (Object.keys(payload).length === 0) {
+      setEditing(false);
+      return;
+    }
+    setEditSaving(true);
+    setEditError(null);
+    try {
+      const updated = await updateRaffleV2(raffle.id, payload, user.id);
+      setRaffle(updated);
+      setEditing(false);
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : "No se pudo actualizar la rifa");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   if (!user) {
     return (
       <Onboarding
@@ -274,6 +363,81 @@ const RaffleDetailPage = () => {
                 </Grid>
               ))}
             </Grid>
+            {isOwner && (
+              <>
+                <Divider />
+                <Stack spacing={2}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Typography variant="subtitle2">Editar rifa</Typography>
+                    {!editing && (
+                      <Button size="small" variant="outlined" onClick={startEdit}>
+                        Editar
+                      </Button>
+                    )}
+                  </Stack>
+                  {editing && (
+                    <>
+                      <TextField
+                        label="Titulo"
+                        value={editTitle}
+                        onChange={(event) => setEditTitle(event.target.value)}
+                        fullWidth
+                      />
+                      <TextField
+                        label="Descripcion"
+                        value={editDescription}
+                        onChange={(event) => setEditDescription(event.target.value)}
+                        multiline
+                        minRows={3}
+                        fullWidth
+                      />
+                      <TextField
+                        label="Fecha del sorteo"
+                        type="datetime-local"
+                        value={editDrawAt}
+                        onChange={(event) => setEditDrawAt(event.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                        fullWidth
+                      />
+                      <ToggleButtonGroup
+                        value={editStatus}
+                        exclusive
+                        onChange={(_, value) => value && setEditStatus(value)}
+                        sx={{
+                          gap: 1,
+                          "& .MuiToggleButton-root": {
+                            borderRadius: 999,
+                            border: "1px solid",
+                            borderColor: "divider",
+                            textTransform: "none",
+                            px: 2,
+                          },
+                        }}
+                      >
+                        {[
+                          { value: "open", label: "Publicada" },
+                          { value: "draft", label: "Borrador" },
+                          { value: "closed", label: "Cerrada" },
+                        ].map((item) => (
+                          <ToggleButton key={item.value} value={item.value}>
+                            {item.label}
+                          </ToggleButton>
+                        ))}
+                      </ToggleButtonGroup>
+                      {editError && <Alert severity="error">{editError}</Alert>}
+                      <Stack direction="row" spacing={2} justifyContent="flex-end">
+                        <Button variant="text" onClick={cancelEdit} disabled={editSaving}>
+                          Cancelar
+                        </Button>
+                        <Button variant="contained" onClick={handleSaveEdit} disabled={editSaving}>
+                          {editSaving ? "Guardando..." : "Guardar cambios"}
+                        </Button>
+                      </Stack>
+                    </>
+                  )}
+                </Stack>
+              </>
+            )}
             <Button variant="text" color="inherit" href="/">
               Volver al catalogo
             </Button>

@@ -15,6 +15,14 @@ export type RaffleCreateV2 = {
   number_start: number;
   number_padding?: number | null;
   status?: string;
+  owner_id?: string | null;
+};
+
+export type RaffleUpdateV2 = {
+  title?: string;
+  description?: string | null;
+  draw_at?: string | null;
+  status?: string;
 };
 
 export type RaffleV2 = {
@@ -32,6 +40,7 @@ export type RaffleV2 = {
   number_start: number;
   number_end: number;
   number_padding?: number | null;
+  owner_id?: string | null;
   created_at: string;
   updated_at: string;
 };

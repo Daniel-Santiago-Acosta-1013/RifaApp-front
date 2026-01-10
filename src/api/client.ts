@@ -3,6 +3,7 @@ import type {
   PurchaseConfirmRequest,
   PurchaseConfirmResponse,
   RaffleCreateV2,
+  RaffleUpdateV2,
   RaffleNumbersResponse,
   RaffleV2,
   ReservationRequest,
@@ -73,6 +74,13 @@ export const createRaffleV2 = (payload: RaffleCreateV2) =>
   request<RaffleV2>(v2Path("/raffles"), {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+
+export const updateRaffleV2 = (raffleId: string, payload: RaffleUpdateV2, userId?: string) =>
+  request<RaffleV2>(v2Path(`/raffles/${raffleId}`), {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+    headers: userId ? { "X-User-Id": userId } : undefined,
   });
 
 export const getRaffleNumbers = (raffleId: string, offset = 0, limit?: number) => {

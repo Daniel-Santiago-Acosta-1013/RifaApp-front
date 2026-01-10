@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -33,6 +34,7 @@ const steps = ["Idea", "Numeros", "Fecha", "Confirmar"];
 
 const CreateRafflePage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -97,10 +99,12 @@ const CreateRafflePage = () => {
         number_start: Number(numberStart),
         number_padding: numberPadding ? Number(numberPadding) : null,
         status,
+        owner_id: user.id,
       };
       const raffle = await createRaffleV2(payload);
       setCreatedId(raffle.id);
       setStep(4);
+      navigate(`/raffles/${raffle.id}`, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al crear la rifa");
     } finally {

@@ -20,6 +20,7 @@ const ModeSwitch = () => {
       size="small"
       aria-label="Selecciona modo"
       sx={{
+        width: "100%",
         backgroundColor: "rgba(255,255,255,0.7)",
         border: "1px solid",
         borderColor: "divider",
@@ -27,6 +28,7 @@ const ModeSwitch = () => {
         padding: 0.4,
         gap: 0.5,
         "& .MuiToggleButton-root": {
+          flex: 1,
           border: "none",
           borderRadius: 999,
           fontWeight: 700,
